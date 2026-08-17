@@ -1,4 +1,5 @@
 
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -10,6 +11,7 @@ namespace TaskManager.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class UsersController : ControllerBase
 {
     private readonly AppDbContext _context;
@@ -25,8 +27,17 @@ public class UsersController : ControllerBase
         .ToListAsync();
         return Ok(users);
     }
+     [HttpGet("admin-test")]
+    [Authorize(Roles = "Admin")]
+    public IActionResult AdminTest()
+    {
+        return Ok(new
+        {
+            message = "You are authorized as Admin"
+        });
+    }
 
-    [HttpGet("{id}")]
+    [HttpGet("{id:int}")]
     public async Task<ActionResult<User>> GetUser(int id)
     {
         var user = await _context.Users
@@ -38,6 +49,7 @@ public class UsersController : ControllerBase
         }
         return Ok(user);
     }
+   
     [HttpPost]
     public async Task<ActionResult<User>> CreateUser(CreateUserDto dto)
     {
