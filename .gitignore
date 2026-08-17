@@ -1,0 +1,98 @@
+# ==========================================
+# Angular / Node.js
+# ==========================================
+
+node_modules/
+.angular/
+.cache/
+dist/
+out-tsc/
+.nx/
+coverage/
+
+# Angular environment files
+# Uncomment if these contain secrets
+# src/environments/environment*.ts
+
+# npm logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ==========================================
+# ASP.NET Core / .NET
+# ==========================================
+
+# Build output
+**/bin/
+**/obj/
+
+# .NET user-specific files
+*.user
+*.userossc
+*.suo
+
+# Visual Studio
+.vs/
+.vscode/
+
+# Rider
+.idea/
+
+# Test results
+TestResults/
+*.trx
+
+# NuGet
+*.nupkg
+*.snupkg
+packages/
+
+# ASP.NET Core local settings
+appsettings.Development.json
+appsettings.Local.json
+
+# ==========================================
+# Database / Local Development
+# ==========================================
+
+# SQLite databases
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+
+# SQL Server local database files
+*.mdf
+*.ldf
+
+# ==========================================
+# Environment / Secrets
+# ==========================================
+
+.env
+.env.*
+!.env.example
+
+# ==========================================
+# OS files
+# ==========================================
+
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ==========================================
+# Logs
+# ==========================================
+
+*.log
+
+# ==========================================
+# Temporary files
+# ==========================================
+
+*.tmp
+*.temp
