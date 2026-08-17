@@ -1,8 +1,9 @@
 
-
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TaskManager.Api.Data;
+using TaskManager.Api.DTOs.Users;
 using TaskManager.Api.Models;
 
 namespace TaskManager.Api.Controllers;
@@ -38,30 +39,54 @@ public class UsersController : ControllerBase
         return Ok(user);
     }
     [HttpPost]
-    public async Task<ActionResult<User>> CreateUser(User user)
+    public async Task<ActionResult<User>> CreateUser(CreateUserDto dto)
     {
         var roleExists = await _context.Roles
-        .AnyAsync(r => r.Id == user.RoleId);
+        .AnyAsync(r => r.Id == dto.RoleId);
         if (!roleExists)
         {
             return BadRequest(new { message = "Invalid Role ID" });
         }
         var emailExists = await _context.Users
-        .AnyAsync(u => u.Email == user.Email);
+        .AnyAsync(u => u.Email == dto.Email);
         if (emailExists)
         {
             return BadRequest(new { message = "Email already exist" });
         }
+
+        var user = new User
+        {
+            FirstName = dto.FirstName,
+            LastName = dto.LastName,
+            Email = dto.Email,
+            RoleId = dto.RoleId,
+            isActive = true
+        };
+
+        var passwordHasher = new PasswordHasher<User>();
+        user.PasswordHash = passwordHasher.HashPassword(
+            user,
+            dto.Password
+        );
+
         _context.Users.Add(user);
         await _context.SaveChangesAsync();
         return CreatedAtAction(
             nameof(GetUser),
             new { id = user.Id },
-            user
+            new
+            {
+                user.Id,
+                user.FirstName,
+                user.LastName,
+                user.Email,
+                user.RoleId,
+                user.isActive
+            }
         );
     }
     [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateUser(int id, User updatedUser)
+    public async Task<IActionResult> UpdateUser(int id, UpdateUserDto updatedUser)
     {
         var user = await _context.Users.FindAsync(id);
         if (user == null)
@@ -78,7 +103,7 @@ public class UsersController : ControllerBase
         user.LastName = updatedUser.LastName;
         user.Email = updatedUser.Email;
         user.RoleId = updatedUser.RoleId;
-        user.isActive = updatedUser.isActive;
+        user.isActive = updatedUser.IsActive;
         await _context.SaveChangesAsync();
         return Ok(user);
     }
