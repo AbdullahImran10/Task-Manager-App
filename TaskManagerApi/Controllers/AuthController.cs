@@ -1,0 +1,118 @@
+
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using TaskManager.Api.Data;
+using TaskManager.Api.DTOs.Auth;
+using TaskManager.Api.Models;
+
+namespace TaskManager.Api.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
+public class AuthController : ControllerBase
+{
+    private readonly AppDbContext _context;
+    private readonly IConfiguration _configuration;
+    public AuthController(AppDbContext context, IConfiguration configuration)
+    {
+        _context = context;
+        _configuration = configuration;
+    }
+    [HttpPost("login")]
+    public async Task<IActionResult> Login(LoginDto loginDto)
+    {
+        var user = await _context.Users
+        .Include(u => u.Role)
+        .FirstOrDefaultAsync(u => u.Email == loginDto.Email);
+        if (user == null)
+        {
+            return Unauthorized(
+                new
+                {
+                    message = "Invalid email or password"
+                }
+            );
+        }
+        if (!user.isActive)
+        {
+            return Unauthorized(new
+            {
+                message = "Your account is inactive"
+            }
+            );
+        }
+        var passwordHasher = new PasswordHasher<User>();
+        var result = passwordHasher.VerifyHashedPassword(
+            user,
+            user.PasswordHash,
+            loginDto.Password
+        );
+        if (result == PasswordVerificationResult.Failed)
+        {
+            return Unauthorized(new
+            {
+                message = "Invalid email or password"
+            });
+        }
+        user.LastLogin = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+        var token = GenerateToken(user);
+        return Ok(new LoginResponseDto
+        {
+            Token = token,
+            UserId = user.Id,
+            FirstName = user.FirstName,
+            Email = user.Email,
+            Role = user.Role?.Name ?? string.Empty
+        });
+    }
+    private string GenerateToken(User user)
+    {
+        var key = _configuration["Jwt:Key"];
+        if (string.IsNullOrEmpty(key))
+        {
+            throw new InvalidOperationException(
+                "Jwt Key is not configured"
+            );
+        }
+
+        var claims = new List<Claim>
+        {
+            new Claim(
+             ClaimTypes.NameIdentifier,
+             user.Id.ToString()
+            ),
+            new Claim(
+            ClaimTypes.Name,
+            user.FirstName
+            ),
+            new Claim(
+              ClaimTypes.Email,
+              user.Email
+            ),
+            new Claim(
+              ClaimTypes.Role,
+              user.Role?.Name ?? "Employee"
+            ),
+        };
+        var securityKey = new SymmetricSecurityKey(
+            Encoding.UTF8.GetBytes(key)
+            );
+        var credentials = new SigningCredentials(
+            securityKey,
+            SecurityAlgorithms.HmacSha256
+        );
+        var token = new JwtSecurityToken(
+            claims: claims,
+            expires: DateTime.UtcNow.AddHours(8),
+            signingCredentials: credentials
+        );
+        return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+
+}
