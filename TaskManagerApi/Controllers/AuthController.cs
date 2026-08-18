@@ -9,6 +9,7 @@ using Microsoft.IdentityModel.Tokens;
 using TaskManager.Api.Data;
 using TaskManager.Api.DTOs.Auth;
 using TaskManager.Api.Models;
+using TaskManager.Api.Services;
 
 namespace TaskManager.Api.Controllers;
 
@@ -18,10 +19,12 @@ public class AuthController : ControllerBase
 {
     private readonly AppDbContext _context;
     private readonly IConfiguration _configuration;
-    public AuthController(AppDbContext context, IConfiguration configuration)
+    private readonly AuditLogService _auditLogService;
+    public AuthController(AppDbContext context, IConfiguration configuration, AuditLogService auditLogService)
     {
         _context = context;
         _configuration = configuration;
+        _auditLogService = auditLogService;
     }
     [HttpPost("login")]
     public async Task<IActionResult> Login(LoginDto loginDto)
@@ -31,6 +34,11 @@ public class AuthController : ControllerBase
         .FirstOrDefaultAsync(u => u.Email == loginDto.Email);
         if (user == null)
         {
+            await _auditLogService.LogAsync(
+            null,
+            "UserLoginFailed",
+            $"Failed login attempt for unknown email: {loginDto.Email}"
+);
             return Unauthorized(
                 new
                 {
@@ -40,6 +48,11 @@ public class AuthController : ControllerBase
         }
         if (!user.isActive)
         {
+             await _auditLogService.LogAsync(
+        user.Id,
+        "UserLoginFailed",
+        "Login attempt was rejected because the account is inactive."
+    );
             return Unauthorized(new
             {
                 message = "Your account is inactive"
@@ -54,6 +67,11 @@ public class AuthController : ControllerBase
         );
         if (result == PasswordVerificationResult.Failed)
         {
+             await _auditLogService.LogAsync(
+                user.Id,
+                "UserLoginFailed",
+                "Failed login attempt due to incorrect password."
+    );
             return Unauthorized(new
             {
                 message = "Invalid email or password"
@@ -61,6 +79,13 @@ public class AuthController : ControllerBase
         }
         user.LastLogin = DateTime.UtcNow;
         await _context.SaveChangesAsync();
+
+        await _auditLogService.LogAsync(
+        user.Id,
+            "UserLogin",
+            $"User {user.FirstName} {user.LastName} logged in successfully."
+        );
+
         var token = GenerateToken(user);
         return Ok(new LoginResponseDto
         {
