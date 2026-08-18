@@ -13,4 +13,15 @@ public class User
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime LastLogin { get; set; }
     public Role? Role { get; set; }
+    public ICollection<TaskItem> CreatedTasks { get; set; }
+    = new List<TaskItem>();
+
+    public ICollection<TaskItem> AssignedTasks { get; set; }
+    = new List<TaskItem>();
+
+    public ICollection<Notification> Notifications { get; set; }
+    = new List<Notification>();
+
+    public ICollection<AuditLog> AuditLogs { get; set; }
+    = new List<AuditLog>();
 }
