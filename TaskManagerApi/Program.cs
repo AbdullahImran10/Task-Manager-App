@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using TaskManager.Api.Data;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using TaskManager.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -33,6 +34,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 });
 
 builder.Services.AddAuthorization();
+
+builder.Services.AddScoped<AuditLogService>();
 
 var app = builder.Build();
 
