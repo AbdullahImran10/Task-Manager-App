@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TaskManager.Api.Data;
 
@@ -11,9 +12,11 @@ using TaskManager.Api.Data;
 namespace TaskManagerApi.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260817095506_AddTasks")]
+    partial class AddTasks
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,72 +24,6 @@ namespace TaskManagerApi.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
-
-            modelBuilder.Entity("TaskManager.Api.Models.AuditLog", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Action")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Details")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int?>("UserId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("AuditLogs");
-                });
-
-            modelBuilder.Entity("TaskManager.Api.Models.Notification", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsRead")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Message")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int?>("TaskId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TaskId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("Notifications");
-                });
 
             modelBuilder.Entity("TaskManager.Api.Models.Role", b =>
                 {
@@ -214,34 +151,6 @@ namespace TaskManagerApi.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("TaskManager.Api.Models.AuditLog", b =>
-                {
-                    b.HasOne("TaskManager.Api.Models.User", "User")
-                        .WithMany("AuditLogs")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("TaskManager.Api.Models.Notification", b =>
-                {
-                    b.HasOne("TaskManager.Api.Models.TaskItem", "Task")
-                        .WithMany("Notifications")
-                        .HasForeignKey("TaskId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.HasOne("TaskManager.Api.Models.User", "User")
-                        .WithMany("Notifications")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Task");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("TaskManager.Api.Models.TaskItem", b =>
                 {
                     b.HasOne("TaskManager.Api.Models.User", "AssignedTo")
@@ -277,20 +186,11 @@ namespace TaskManagerApi.Migrations
                     b.Navigation("Users");
                 });
 
-            modelBuilder.Entity("TaskManager.Api.Models.TaskItem", b =>
-                {
-                    b.Navigation("Notifications");
-                });
-
             modelBuilder.Entity("TaskManager.Api.Models.User", b =>
                 {
                     b.Navigation("AssignedTasks");
 
-                    b.Navigation("AuditLogs");
-
                     b.Navigation("CreatedTasks");
-
-                    b.Navigation("Notifications");
                 });
 #pragma warning restore 612, 618
         }
